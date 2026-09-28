@@ -1,0 +1,24 @@
+# Core dependencies
+flask
+pandas
+numpy
+scikit-learn==1.6.1
+joblib
+
+# Azure SDKs
+azure-storage-blob
+
+# MLflow for experiment tracking
+pyodbc
+mlflow
+
+# Data handling and requests
+requests
+requests-cache
+retry-requests
+
+# If you still have Azure Functions trigger code somewhere
+azure-functions
+
+# Optional: for drift detection
+scipy

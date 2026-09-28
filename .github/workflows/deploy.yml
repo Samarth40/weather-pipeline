@@ -1,0 +1,64 @@
+name: Deploy ML Model API to Azure
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      ACR_NAME: ${{ secrets.ACR_NAME }}
+      RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+      LOCATION: ${{ secrets.LOCATION }}
+      IMAGE_NAME: ml-model
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Docker login to ACR
+        run: |
+          echo ${{ secrets.ACR_PASSWORD }} | docker login $ACR_NAME.azurecr.io -u ${{ secrets.ACR_USERNAME }} --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build -t $ACR_NAME.azurecr.io/$IMAGE_NAME:latest -f ml_model/Dockerfile ml_model/
+
+      - name: Push Docker image to ACR
+        run: |
+          docker push $ACR_NAME.azurecr.io/$IMAGE_NAME:latest
+
+      - name: Delete existing container (if exists)
+        run: |
+          az container show --resource-group $RESOURCE_GROUP --name ml-model-api && \
+          az container delete --resource-group $RESOURCE_GROUP --name ml-model-api --yes || echo "Container does not exist"
+
+      - name: Deploy to Azure Container Instance
+        run: |
+          az container create \
+            --resource-group "$RESOURCE_GROUP" \
+            --name ml-model-api \
+            --image "$ACR_NAME.azurecr.io/$IMAGE_NAME:latest" \
+            --registry-login-server "$ACR_NAME.azurecr.io" \
+            --registry-username "${{ secrets.ACR_USERNAME }}" \
+            --registry-password "${{ secrets.ACR_PASSWORD }}" \
+            --dns-name-label "samarth-ml-model-api" \
+            --ip-address public \
+            --ports 5000 \
+            --cpu 1 \
+            --memory 2 \
+            --location "$LOCATION" \
+            --os-type Linux \
+            --restart-policy Always \
+            --environment-variables \
+              AZURE_STORAGE_CONNECTION_STRING="${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+              AZURE_STORAGE_ACCOUNT="${{ secrets.AZURE_STORAGE_ACCOUNT }}" \
+              MLFLOW_TRACKING_URI="${{ secrets.MLFLOW_TRACKING_URI }}" \
+              MLFLOW_EXPERIMENT_NAME="${{ secrets.MLFLOW_EXPERIMENT_NAME }}"

@@ -1,0 +1,10 @@
+streamlit
+pandas
+plotly
+scikit-learn
+joblib
+mlflow
+azure-storage-blob
+pyodbc
+sqlalchemy
+typing-extensions>=4.7.1
