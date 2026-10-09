@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/191468330925659572/31d8cdc6291244729ede87b1e1ebd0f4/artifacts
+end_time: 1791550051550
+entry_point_name: ''
+experiment_id: '191468330925659572'
+lifecycle_stage: active
+run_id: 31d8cdc6291244729ede87b1e1ebd0f4
+run_name: placid-auk-972
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1791550035657
+status: 4
+tags: []
+user_id: samar

@@ -1,4 +1,5 @@
 import os
+import sys
 from io import BytesIO
 import streamlit as st
 import pandas as pd
@@ -8,7 +9,14 @@ from mlflow.tracking import MlflowClient
 import joblib
 from datetime import datetime
 from utils.app_helpers import list_weather_blobs
-from azure.storage.blob import BlobServiceClient
+
+# Allow importing local_storage_adapter from root
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+try:
+    from local_storage_adapter import get_blob_service_client
+except ImportError:
+    from azure.storage.blob import BlobServiceClient
+    get_blob_service_client = lambda cs: BlobServiceClient.from_connection_string(cs)
 
 # ─────────────────────────────────────────────
 # 0. Auxiliary Functions
@@ -27,12 +35,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5001")
 CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 DAILY_DATA_PATH = "daily-weather-data"
 HISTORICAL_DATA_PATH = "weather-data"
 
-blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+blob_service_client = get_blob_service_client(CONNECTION_STRING)
 
 # ─────────────────────────────────────────────
 # 2. Website Header

@@ -1,10 +1,18 @@
 # inference.py
 import pandas as pd
 import joblib
-from azure.storage.blob import BlobServiceClient
 from io import BytesIO
 import re
 import os
+import sys
+
+# Allow importing local_storage_adapter from root
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+try:
+    from local_storage_adapter import get_blob_service_client
+except ImportError:
+    from azure.storage.blob import BlobServiceClient
+    get_blob_service_client = lambda cs: BlobServiceClient.from_connection_string(cs)
 
 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 model_container = "models"
@@ -76,7 +84,7 @@ def run_inference_on_blob(blob_name):
     """
     Runs inference on the specified blob in the input container.
     """
-    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+    blob_service_client = get_blob_service_client(connection_string)
     
     # Download new data
     input_blob_client = blob_service_client.get_blob_client(input_container, blob_name)

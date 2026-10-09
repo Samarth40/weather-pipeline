@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/191468330925659572/2191c4f1c9f6463395b33d23be4bd9d6/artifacts
+end_time: 1791550160463
+entry_point_name: ''
+experiment_id: '191468330925659572'
+lifecycle_stage: active
+run_id: 2191c4f1c9f6463395b33d23be4bd9d6
+run_name: thundering-lamb-751
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1791550113840
+status: 3
+tags: []
+user_id: samar

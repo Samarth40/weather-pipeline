@@ -1,0 +1,10 @@
+artifact_location: mlflow-artifacts:/191468330925659572/models/m-d9c51ef19b794c79aeb604fa05406a6b/artifacts
+creation_timestamp: 1791550275218
+experiment_id: '191468330925659572'
+last_updated_timestamp: 1791550292127
+model_id: m-d9c51ef19b794c79aeb604fa05406a6b
+model_type: ''
+name: preprocessor
+source_run_id: 245d1c5a64b44549be25fdc08f765ba5
+status: 2
+status_message: null

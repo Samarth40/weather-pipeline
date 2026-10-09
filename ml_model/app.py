@@ -1,11 +1,20 @@
 # app.py
 from flask import Flask, request, jsonify
-from azure.storage.blob import BlobServiceClient
 from io import BytesIO
 import pandas as pd
 import os
+import sys
 import re
 from datetime import datetime
+
+# Allow importing local_storage_adapter from root
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+try:
+    from local_storage_adapter import get_blob_service_client
+except ImportError:
+    from azure.storage.blob import BlobServiceClient
+    get_blob_service_client = lambda cs: BlobServiceClient.from_connection_string(cs)
+
 from inference import run_inference_on_blob
 from train_model import retrain_model
 from detect_drift import detect_drift
@@ -26,7 +35,7 @@ def process_data():
         return jsonify({"status": "failed", "error": "Missing blob_name in POST request"}), 400
 
     try:
-        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+        blob_service_client = get_blob_service_client(connection_string)
         container_client = blob_service_client.get_container_client(blob_container)
         model_container_client = blob_service_client.get_container_client(models_container)
 

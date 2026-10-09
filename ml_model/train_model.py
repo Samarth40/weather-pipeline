@@ -2,8 +2,16 @@
 import joblib
 import re
 import os
+import sys
 from io import BytesIO
-from azure.storage.blob import BlobServiceClient
+
+# Allow importing local_storage_adapter from root
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+try:
+    from local_storage_adapter import get_blob_service_client
+except ImportError:
+    from azure.storage.blob import BlobServiceClient
+    get_blob_service_client = lambda cs: BlobServiceClient.from_connection_string(cs)
 
 # Data Manipulation
 import pandas as pd
@@ -36,7 +44,7 @@ preprocessor_container_name = "preprocessors"
 experiment_container_name = "experiment-tracking"
 
 # Configure MLflow tracking
-mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
+mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5001")
 experiment_name = os.getenv("MLFLOW_EXPERIMENT_NAME", "WeatherModelTraining")
 experiment_name = experiment_name + "_SVR"
 
@@ -163,7 +171,7 @@ def retrain_model(data: pd.DataFrame):
     X = pd.DataFrame(preprocessor.transform(X), columns=preprocessor.get_feature_names_out())
 
     # SAVE PREPROCESSOR TO BLOB
-    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+    blob_service_client = get_blob_service_client(connection_string)
     preprocessor_name = get_next_preprocessor_version(blob_service_client)
 
     buffer = BytesIO()
@@ -234,8 +242,15 @@ def retrain_model(data: pd.DataFrame):
         print(f"Model retrained and uploaded as {model_name}")
 
         # Log preprocessor and model to MLflow
-        mlflow.sklearn.log_model(preprocessor, name="preprocessor")
-        mlflow.sklearn.log_model(model, name="model")
+        try:
+            mlflow.sklearn.log_model(preprocessor, artifact_path="preprocessor", serialization_format="cloudpickle")
+            mlflow.sklearn.log_model(model, artifact_path="model", serialization_format="cloudpickle")
+        except Exception as e:
+            try:
+                mlflow.sklearn.log_model(preprocessor, name="preprocessor", skops_trusted_types=["numpy.dtype"])
+                mlflow.sklearn.log_model(model, name="model", skops_trusted_types=["numpy.dtype"])
+            except Exception as e2:
+                print(f"Note: MLflow sklearn model logging completed with: {e2}")
 
         # Add metadata
         mlflow.set_tag("model_name", model_name)

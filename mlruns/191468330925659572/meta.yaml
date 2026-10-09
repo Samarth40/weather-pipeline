@@ -1,0 +1,9 @@
+artifact_location: mlflow-artifacts:/191468330925659572
+creation_time: 1791550034281
+effective_trace_archival_retention: null
+experiment_id: '191468330925659572'
+last_update_time: 1791550034281
+lifecycle_stage: active
+name: WeatherModelTraining_SVR
+trace_location: null
+workspace: default
